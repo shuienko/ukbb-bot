@@ -25,8 +25,8 @@ const (
 	PrevImageName = "prev.png"
 	DBPath        = "ukbb-bot.db"
 
-	AlertCronSchedule    = "@every 9m30s"
-	DownloadCronSchedule = "@every 10m"
+	AlertCronSchedule    = "@every 13m"
+	DownloadCronSchedule = "@every 12m"
 
 	BaseURL = "https://meteoinfo.by/radar"
 )
