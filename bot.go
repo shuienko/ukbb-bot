@@ -17,17 +17,16 @@ const (
 	WarningDist  = 23 // pix
 	CriticalDist = 11 // pix
 
-	ScalePixKm   = 1.14 // pix/km
 	HomeX        = 206
 	HomeY        = 231
 	RGBDeviation = 5 // for each R, G, B level
 
 	NowImageName  = "now.png"
 	PrevImageName = "prev.png"
-	DBPath        = "kwabot.db"
+	DBPath        = "ukbb-bot.db"
 
-	AlertCronSchedule    = "@every 1m30s"
-	DownloadCronSchedule = "@every 1m"
+	AlertCronSchedule    = "@every 9m30s"
+	DownloadCronSchedule = "@every 10m"
 
 	BaseURL = "https://meteoinfo.by/radar"
 )
@@ -59,12 +58,13 @@ var (
 // ##### INIT #####
 func init() {
 	// Get environment variables and check errors
-	BotToken = os.Getenv("KWABOT_BOT_TOKEN")
+	BotToken = os.Getenv("UKBB_BOT_TOKEN")
 	if len(BotToken) == 0 {
-		log.Fatal("KWABOT_BOT_TOKEN environment variable is not set. Exit.")
+		log.Fatal("UKBB_BOT_TOKEN environment variable is not set. Exit.")
 	}
 }
 
+// ##### MAIN #####
 func main() {
 	log.Println("Starting Bot...")
 
@@ -107,23 +107,24 @@ func main() {
 		}
 	})
 
-	// Add periodic job for alerting
 	c := cron.New()
 
+	// Add periodic job for downloading new images
 	c.AddFunc(DownloadCronSchedule, func() {
 		// Copy it to prev.png and then download a new one
 		input, err := ioutil.ReadFile(NowImageName)
 		if err != nil {
-			log.Fatal("Can't read from file", NowImageName)
+			log.Println("Can't read from file", NowImageName)
 		}
 		err = ioutil.WriteFile(PrevImageName, input, 0644)
 		if err != nil {
-			log.Fatal("Can't write to file", PrevImageName)
+			log.Println("Can't write to file", PrevImageName)
 		}
 
 		DownloadImage(GetImageURL())
 	})
 
+	// Add periodic job for alerting
 	c.AddFunc(AlertCronSchedule, func() {
 		var userObj *tb.User
 
@@ -159,6 +160,7 @@ func main() {
 		}
 	})
 
+	// Download first image bewfore bot and cron start
 	DownloadImage(GetImageURL())
 
 	c.Start()

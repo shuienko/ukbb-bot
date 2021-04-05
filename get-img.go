@@ -8,7 +8,6 @@ import (
 )
 
 func GetImageURL() string {
-
 	client := &http.Client{}
 
 	// Create request
@@ -29,10 +28,10 @@ func GetImageURL() string {
 	// Read Response Body
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
-	// Display Results
-
+	// Find image refereince in HTML body
 	re := regexp.MustCompile(`/UKBB/UKBB_[0-9]+.png`)
 	imgURLPath := re.FindString(string(respBody))
+
 	return BaseURL + imgURLPath
 }
 
@@ -58,7 +57,6 @@ func DownloadImage(url string) {
 	// Save to file
 	err = ioutil.WriteFile(NowImageName, respBody, 0644)
 	if err != nil {
-		log.Fatal("Can't save image from URL", url)
+		log.Println("Can't save image from URL", url)
 	}
-
 }

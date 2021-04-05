@@ -27,7 +27,7 @@ func handleStart(m *tb.Message) string {
 	userID := fmt.Sprintf("%d", m.Sender.ID)
 	userObj, err := json.Marshal(m.Sender)
 	if err != nil {
-		log.Fatal("Cant't convert m.Sender to JSON")
+		log.Println("Cant't convert m.Sender to JSON")
 	}
 
 	if !db.Has([]byte(userID)) {
