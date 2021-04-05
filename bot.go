@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"time"
 
+	"github.com/prologic/bitcask"
+	"github.com/robfig/cron/v3"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -20,10 +23,14 @@ const (
 
 	NowImageName  = "now.png"
 	PrevImageName = "prev.png"
+	DBPath        = "kwabot.db"
+
+	CronSchedule = "@every 10m"
 )
 
 var (
 	BotToken string
+	c        *cron.Cron
 
 	PrecipLow  = Pixel{155, 234, 143}
 	PrecipMed  = Pixel{88, 255, 67}
@@ -46,19 +53,6 @@ var (
 	SquallHigh = Pixel{190, 28, 255}
 )
 
-/*
-TODO:
-- Parsre website http page and download png image.
-- For each saved user(location) process nearby pixels (10-20 km range?). If something is there - alert.
-- Probably, should split users and start processing within goroutines. Just to speed up.
-- Need to have image cache. 10m min expiration. Just a local disk cache
-
-
-URLs:
-https://stackoverflow.com/questions/33186783/get-a-pixel-array-from-from-golang-image-image
-
-*/
-
 // ##### INIT #####
 func init() {
 	// Get environment variables and check errors
@@ -66,6 +60,9 @@ func init() {
 	if len(BotToken) == 0 {
 		log.Fatal("KWABOT_BOT_TOKEN environment variable is not set. Exit.")
 	}
+
+	// Init cron
+	c = cron.New()
 }
 
 func main() {
@@ -110,6 +107,41 @@ func main() {
 		}
 	})
 
+	// Add periodic job for alerting
+	c.AddFunc(CronSchedule, func() {
+		var userObj *tb.User
+
+		// Check weather
+		gettingWorse := isItGettingWorse()
+
+		if gettingWorse {
+			// Open databse
+			db, _ := bitcask.Open(DBPath)
+			defer db.Close()
+
+			// Get all keys
+			keys := db.Keys()
+			for key := range keys {
+				userBytearray, err := db.Get(key)
+				if err != nil {
+					log.Println("Can't get user object from database. ID:", string(key))
+				}
+
+				err = json.Unmarshal(userBytearray, userObj)
+				if err != nil {
+					log.Println("Can't Unmarshal user from byte array. ID:", string(key))
+				}
+
+				// Send message to a user
+				_, err = b.Send(userObj, alertMessage)
+				if err != nil {
+					log.Println("Can't send message to", string(key))
+				}
+			}
+		}
+	})
+
 	b.Start()
+	c.Start()
 
 }
