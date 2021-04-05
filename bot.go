@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -25,12 +26,14 @@ const (
 	PrevImageName = "prev.png"
 	DBPath        = "kwabot.db"
 
-	CronSchedule = "@every 10m"
+	AlertCronSchedule    = "@every 1m30s"
+	DownloadCronSchedule = "@every 1m"
+
+	BaseURL = "https://meteoinfo.by/radar"
 )
 
 var (
 	BotToken string
-	c        *cron.Cron
 
 	PrecipLow  = Pixel{155, 234, 143}
 	PrecipMed  = Pixel{88, 255, 67}
@@ -60,13 +63,10 @@ func init() {
 	if len(BotToken) == 0 {
 		log.Fatal("KWABOT_BOT_TOKEN environment variable is not set. Exit.")
 	}
-
-	// Init cron
-	c = cron.New()
 }
 
 func main() {
-	log.Println("Start Bot")
+	log.Println("Starting Bot...")
 
 	// Create new bot entity
 	b, err := tb.NewBot(tb.Settings{
@@ -108,8 +108,26 @@ func main() {
 	})
 
 	// Add periodic job for alerting
-	c.AddFunc(CronSchedule, func() {
+	c := cron.New()
+
+	c.AddFunc(DownloadCronSchedule, func() {
+		// Copy it to prev.png and then download a new one
+		input, err := ioutil.ReadFile(NowImageName)
+		if err != nil {
+			log.Fatal("Can't read from file", NowImageName)
+		}
+		err = ioutil.WriteFile(PrevImageName, input, 0644)
+		if err != nil {
+			log.Fatal("Can't write to file", PrevImageName)
+		}
+
+		DownloadImage(GetImageURL())
+	})
+
+	c.AddFunc(AlertCronSchedule, func() {
 		var userObj *tb.User
+
+		log.Println("Running alert job.")
 
 		// Check weather
 		gettingWorse := isItGettingWorse()
@@ -141,7 +159,9 @@ func main() {
 		}
 	})
 
-	b.Start()
+	DownloadImage(GetImageURL())
+
 	c.Start()
+	b.Start()
 
 }
