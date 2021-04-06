@@ -7,7 +7,7 @@ import (
 	"regexp"
 )
 
-func GetImageURL() string {
+func ImageURL() string {
 	client := &http.Client{}
 
 	// Create request

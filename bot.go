@@ -102,7 +102,7 @@ func main() {
 
 	// Handle button
 	b.Handle(&btnGetRadarImage, func(m *tb.Message) {
-		_, err = b.Send(m.Sender, handleGetRadarImage(m), options)
+		_, err = b.Send(m.Sender, handleGetRadarImage(), options)
 		if err != nil {
 			log.Println("Failed to respond on btnGetRadarImage:", err)
 		}
@@ -123,11 +123,11 @@ func main() {
 		}
 
 		// Download now.png
-		newImageURL := GetImageURL()
+		newImageURL := ImageURL()
 		DownloadImage(newImageURL)
 
 		log.Println("Starting weather check...")
-		var userObj *tb.User
+		var userObj tb.User
 
 		// Check weather
 		gettingWorse := isItGettingWorse()
@@ -147,13 +147,13 @@ func main() {
 					log.Println("Can't get user object from database. ID:", string(key))
 				}
 
-				err = json.Unmarshal(userBytearray, userObj)
+				err = json.Unmarshal(userBytearray, &userObj)
 				if err != nil {
 					log.Println("Can't Unmarshal user from byte array. ID:", string(key))
 				}
 
 				// Send message to a user
-				_, err = b.Send(userObj, alertMessage)
+				_, err = b.Send(&userObj, alertMessage, options)
 				if err != nil {
 					log.Println("Can't send message to", string(key))
 				}
@@ -162,7 +162,7 @@ func main() {
 	})
 
 	// Download first image bewfore bot and cron start
-	DownloadImage(GetImageURL())
+	DownloadImage(ImageURL())
 
 	c.Start()
 	b.Start()

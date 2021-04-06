@@ -45,6 +45,6 @@ func handleStart(m *tb.Message) string {
 }
 
 // handleGetRadarImage upload now.png from disk to chat
-func handleGetRadarImage(m *tb.Message) *tb.Photo {
+func handleGetRadarImage() *tb.Photo {
 	return &tb.Photo{File: tb.FromDisk(NowImageName)}
 }
