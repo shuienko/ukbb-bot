@@ -27,8 +27,7 @@ const (
 	PrevImageName = "prev.png"
 	DBPath        = "ukbb-bot.db"
 
-	AlertCronSchedule    = "@every 9m"
-	DownloadCronSchedule = "@every 5m"
+	CronSchedule = "@every 10m"
 
 	BaseURL = "https://meteoinfo.by/radar"
 )
@@ -112,8 +111,8 @@ func main() {
 	c := cron.New()
 
 	// Add periodic job for downloading new images
-	c.AddFunc(DownloadCronSchedule, func() {
-		// Copy it to prev.png and then download a new one
+	c.AddFunc(CronSchedule, func() {
+		// Copy now.png to prev.png
 		input, err := ioutil.ReadFile(NowImageName)
 		if err != nil {
 			log.Println("Can't read from file", NowImageName)
@@ -123,19 +122,19 @@ func main() {
 			log.Println("Can't write to file", PrevImageName)
 		}
 
-		DownloadImage(GetImageURL())
-	})
+		// Download now.png
+		newImageURL := GetImageURL()
+		DownloadImage(newImageURL)
 
-	// Add periodic job for alerting
-	c.AddFunc(AlertCronSchedule, func() {
+		log.Println("Starting weather check...")
 		var userObj *tb.User
-
-		log.Println("Running alert job.")
 
 		// Check weather
 		gettingWorse := isItGettingWorse()
 
 		if gettingWorse {
+			log.Println("Weather is getting worse. Sending alerts.")
+
 			// Open databse
 			db, _ := bitcask.Open(DBPath)
 			defer db.Close()
