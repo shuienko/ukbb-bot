@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 
-	"github.com/prologic/bitcask"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/guregu/dynamo"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -19,26 +19,16 @@ const (
 	getRaratImageMsg = `Зображення з Радару 📡`
 )
 
-// handleStart save m.Sender record to DB. key: ID, value []byte from json.Marshal(m.Sender)
+// handleStart saves m.Sender object to dynamoDB table
 func handleStart(m *tb.Message) string {
-	db, _ := bitcask.Open(DBPath)
-	defer db.Close()
+	db := dynamo.New(session.New(), &aws.Config{Region: aws.String(AWSRegion)})
+	table := db.Table(DynamoTable)
 
-	userID := fmt.Sprintf("%d", m.Sender.ID)
-	userObj, err := json.Marshal(m.Sender)
+	err := table.Put(m.Sender).Run()
 	if err != nil {
-		log.Println("Cant't convert m.Sender to JSON")
-	}
-
-	if !db.Has([]byte(userID)) {
-		err = db.Put([]byte(userID), userObj)
-		if err == nil {
-			log.Printf("User [%s] saved to database\n", userID)
-		} else {
-			log.Printf("Can't save user [%s] to database\n", userID)
-		}
+		log.Println("Can't save user to database. ID:", m.Sender.ID, err)
 	} else {
-		log.Printf("User [%s] is already in database\n", userID)
+		log.Printf("User [%d] saved to database\n", m.Sender.ID)
 	}
 
 	return startReplyMessage

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
 	"time"
 
-	"github.com/prologic/bitcask"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/guregu/dynamo"
 	"github.com/robfig/cron/v3"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -30,6 +31,9 @@ const (
 	CronSchedule = "@every 10m"
 
 	BaseURL = "https://meteoinfo.by/radar"
+
+	DynamoTable = "ukbb-bot"
+	AWSRegion   = "us-east-1"
 )
 
 var (
@@ -127,35 +131,30 @@ func main() {
 		DownloadImage(newImageURL)
 
 		log.Println("Starting weather check...")
-		var userObj tb.User
 
 		// Check weather
 		gettingWorse := isItGettingWorse()
 
+		// If weather conditions are bad
 		if gettingWorse {
 			log.Println("Weather is getting worse. Sending alerts.")
 
 			// Open databse
-			db, _ := bitcask.Open(DBPath)
-			defer db.Close()
+			db := dynamo.New(session.New(), &aws.Config{Region: aws.String(AWSRegion)})
+			table := db.Table(DynamoTable)
 
 			// Get all keys
-			keys := db.Keys()
-			for key := range keys {
-				userBytearray, err := db.Get(key)
-				if err != nil {
-					log.Println("Can't get user object from database. ID:", string(key))
-				}
+			var users []tb.User
+			err = table.Scan().All(&users)
+			if err != nil {
+				log.Println("Can't get user list from databse", err)
+			}
 
-				err = json.Unmarshal(userBytearray, &userObj)
+			// Send message to all users
+			for _, user := range users {
+				_, err = b.Send(&user, alertMessage, options)
 				if err != nil {
-					log.Println("Can't Unmarshal user from byte array. ID:", string(key))
-				}
-
-				// Send message to a user
-				_, err = b.Send(&userObj, alertMessage, options)
-				if err != nil {
-					log.Println("Can't send message to", string(key))
+					log.Printf("Can't send message to %d\n", user.ID)
 				}
 			}
 		}
