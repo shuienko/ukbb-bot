@@ -12,6 +12,8 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
+// TODO: database MUST be external. Options: Redis on DO/AWS Dynamodb/AWS Elastichache/Synology NFS/etc.
+
 const (
 	InfoDist     = 34 // pix
 	WarningDist  = 23 // pix
@@ -25,8 +27,8 @@ const (
 	PrevImageName = "prev.png"
 	DBPath        = "ukbb-bot.db"
 
-	AlertCronSchedule    = "@every 13m"
-	DownloadCronSchedule = "@every 12m"
+	AlertCronSchedule    = "@every 9m"
+	DownloadCronSchedule = "@every 5m"
 
 	BaseURL = "https://meteoinfo.by/radar"
 )
