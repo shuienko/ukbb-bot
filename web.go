@@ -11,9 +11,11 @@ import (
 // imageURL returns URL to the most recent radar image available
 func imageURL() string {
 	// Disable HTTPS certificate check. WORKAROUND
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 
-	client := &http.Client{}
+	client := &http.Client{Transport: tr}
 
 	// Create request
 	req, _ := http.NewRequest("GET", baseURL+"?q=UKBB", nil)
@@ -43,12 +45,14 @@ func imageURL() string {
 // downloadImage downloads image to NowImageName
 func downloadImage(url string) {
 	// Disable HTTPS certificate check. WORKAROUND
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 
 	log.Println("Downloading image:", url)
 
 	// Create client
-	client := &http.Client{}
+	client := &http.Client{Transport: tr}
 
 	// Create request
 	req, _ := http.NewRequest("GET", url, nil)
