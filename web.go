@@ -7,11 +7,12 @@ import (
 	"regexp"
 )
 
-func ImageURL() string {
+// imageURL returns URL to the most recent radar image available
+func imageURL() string {
 	client := &http.Client{}
 
 	// Create request
-	req, _ := http.NewRequest("GET", BaseURL+"?q=UKBB", nil)
+	req, _ := http.NewRequest("GET", baseURL+"?q=UKBB", nil)
 
 	parseFormErr := req.ParseForm()
 	if parseFormErr != nil {
@@ -32,10 +33,11 @@ func ImageURL() string {
 	re := regexp.MustCompile(`/UKBB/UKBB_[0-9]+.png`)
 	imgURLPath := re.FindString(string(respBody))
 
-	return BaseURL + imgURLPath
+	return baseURL + imgURLPath
 }
 
-func DownloadImage(url string) {
+// downloadImage downloads image to NowImageName
+func downloadImage(url string) {
 	log.Println("Downloading image:", url)
 
 	// Create client
@@ -55,8 +57,22 @@ func DownloadImage(url string) {
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
 	// Save to file
-	err = ioutil.WriteFile(NowImageName, respBody, 0644)
+	err = ioutil.WriteFile(nowImageName, respBody, 0644)
 	if err != nil {
 		log.Println("Can't save image from URL", url)
+	}
+}
+
+// copyNewToPrev will copy file with NowImageName to PrevImageName
+func copyNewToPrev() {
+	input, err := ioutil.ReadFile(nowImageName)
+
+	if err != nil {
+		log.Println("Can't read from file", nowImageName)
+	}
+
+	err = ioutil.WriteFile(prevImageName, input, 0644)
+	if err != nil {
+		log.Println("Can't write to file", prevImageName)
 	}
 }

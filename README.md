@@ -1,2 +1,2 @@
-# KWABot
-Kyiv Weather Alerts Telegram Bot
+# UKBB Bot
+Weather Info from Kyiv Boryspil Airport radar

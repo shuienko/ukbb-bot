@@ -30,8 +30,8 @@ type RadarImage struct {
 	Height int
 }
 
-// ComparePixels returns true if pixels are similar and false if not
-func ComparePixels(p1, p2 Pixel) bool {
+// comparePixels returns true if pixels are similar and false if not
+func comparePixels(p1, p2 Pixel) bool {
 	if math.Abs(float64(p1.R-p2.R)) < float64(RGBDeviation) &&
 		math.Abs(float64(p1.G-p2.G)) < float64(RGBDeviation) &&
 		math.Abs(float64(p1.B-p2.B)) < float64(RGBDeviation) {
@@ -59,51 +59,51 @@ func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) Pixel {
 	return Pixel{int(r / 257), int(g / 257), int(b / 257)}
 }
 
-// AnalizeArea returns count of pixels for each of the weather condition
-func AnalizeArea(area []Point) map[string]int {
+// analizeArea returns count of pixels for each of the weather condition
+func analizeArea(area []Point) map[string]int {
 
 	weatherData := make(map[string]int)
 
 	for _, pt := range area {
 		switch {
 		// "Normal" Precipitations
-		case ComparePixels(pt.px, PrecipLow):
+		case comparePixels(pt.px, precipLow):
 			weatherData["PrecipLow"]++
-		case ComparePixels(pt.px, PrecipMed):
+		case comparePixels(pt.px, precipMed):
 			weatherData["PrecipMed"]++
-		case ComparePixels(pt.px, PrecipHigh):
+		case comparePixels(pt.px, precipHigh):
 			weatherData["PrecipHigh"]++
 
 		// Convective Precipitations
-		case ComparePixels(pt.px, ConvPrecipLow):
+		case comparePixels(pt.px, convPrecipLow):
 			weatherData["ConvPrecipLow"]++
-		case ComparePixels(pt.px, ConvPrecipMed):
+		case comparePixels(pt.px, convPrecipMed):
 			weatherData["ConvPrecipMed"]++
-		case ComparePixels(pt.px, ConvPrecipHigh):
+		case comparePixels(pt.px, convPrecipHigh):
 			weatherData["ConvPrecipHigh"]++
 
 		// Storm probability
-		case ComparePixels(pt.px, Storm70):
+		case comparePixels(pt.px, storm70):
 			weatherData["Storm70"]++
-		case ComparePixels(pt.px, Storm90):
+		case comparePixels(pt.px, storm90):
 			weatherData["Storm90"]++
-		case ComparePixels(pt.px, Storm100):
+		case comparePixels(pt.px, storm100):
 			weatherData["Storm100"]++
 
 		// Hail
-		case ComparePixels(pt.px, HailLow):
+		case comparePixels(pt.px, hailLow):
 			weatherData["HailLow"]++
-		case ComparePixels(pt.px, HailMed):
+		case comparePixels(pt.px, hailMed):
 			weatherData["HailMed"]++
-		case ComparePixels(pt.px, HailHigh):
+		case comparePixels(pt.px, hailHigh):
 			weatherData["HailHigh"]++
 
 		// Squall
-		case ComparePixels(pt.px, SquallLow):
+		case comparePixels(pt.px, squallLow):
 			weatherData["SquallLow"]++
-		case ComparePixels(pt.px, SquallMed):
+		case comparePixels(pt.px, squallMed):
 			weatherData["SquallMed"]++
-		case ComparePixels(pt.px, SquallHigh):
+		case comparePixels(pt.px, squallHigh):
 			weatherData["SquallHigh"]++
 		}
 	}
@@ -113,22 +113,24 @@ func AnalizeArea(area []Point) map[string]int {
 
 // isItGettingWorse returns true if something is withing InfoDist range
 func isItGettingWorse() bool {
+	log.Println("Starting weather check...")
+
 	var picNow, picPrev RadarImage
 
-	fileNow := openPNG(NowImageName)
+	fileNow := openPNG(nowImageName)
 	defer fileNow.Close()
 
-	filePrev := openPNG(PrevImageName)
+	filePrev := openPNG(prevImageName)
 	defer filePrev.Close()
 
 	picNow.New(fileNow)
 	picPrev.New(filePrev)
 
-	areaNow := picNow.GetArea(HomeX, HomeY, InfoDist)
-	areaPrev := picPrev.GetArea(HomeX, HomeY, InfoDist)
+	areaNow := picNow.GetArea(homeX, homeY, monisoringDistance)
+	areaPrev := picPrev.GetArea(homeX, homeY, monisoringDistance)
 
-	weatherDataNow := AnalizeArea(areaNow)
-	weatherDataPrev := AnalizeArea(areaPrev)
+	weatherDataNow := analizeArea(areaNow)
+	weatherDataPrev := analizeArea(areaPrev)
 
 	if len(weatherDataPrev) == 0 && len(weatherDataNow) != 0 {
 		return true
