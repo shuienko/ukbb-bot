@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/guregu/dynamo"
+	"github.com/patrickmn/go-cache"
 	"github.com/robfig/cron/v3"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
@@ -28,10 +29,14 @@ const (
 
 	tableName = "ukbb-bot"
 	AWSRegion = "us-east-1"
+
+	cacheExpiration = time.Hour * 2
+	cacheCleanup    = cacheExpiration * 10
 )
 
 var (
 	botToken string
+	state    *cache.Cache
 
 	precipLow  = Pixel{155, 234, 143}
 	precipMed  = Pixel{88, 255, 67}
@@ -75,6 +80,9 @@ func init() {
 
 	// Download first image bewfore bot and cron start
 	downloadImage(imageURL())
+
+	// Create Cache
+	state = cache.New(cacheExpiration, cacheCleanup)
 }
 
 // ##### MAIN #####
@@ -133,6 +141,15 @@ func main() {
 		// If weather is bad
 		if gettingWorse {
 			log.Println("Weather is getting worse. Sending alerts.")
+
+			alarmSent, _ := state.Get("alarm")
+			if alarmSent != nil {
+				log.Println("Weather is getting worse but alarm was triggered less than 2 hous ago. Skip.")
+				return
+			}
+
+			// Save record about bad weather to the cache
+			state.Set("alarm", "triggered", cacheExpiration)
 
 			// Open databse
 			table := dynamodbTable()
