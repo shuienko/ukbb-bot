@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,6 +10,9 @@ import (
 
 // imageURL returns URL to the most recent radar image available
 func imageURL() string {
+	// Disable HTTPS certificate check. WORKAROUND
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
 	client := &http.Client{}
 
 	// Create request
@@ -38,6 +42,9 @@ func imageURL() string {
 
 // downloadImage downloads image to NowImageName
 func downloadImage(url string) {
+	// Disable HTTPS certificate check. WORKAROUND
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
 	log.Println("Downloading image:", url)
 
 	// Create client
