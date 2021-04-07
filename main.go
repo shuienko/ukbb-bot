@@ -154,7 +154,7 @@ func main() {
 		}
 	})
 
-	// Start bot and Cron
+	// Start Bot and Cron
 	c.Start()
 	b.Start()
 
