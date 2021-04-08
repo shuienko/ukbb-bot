@@ -30,7 +30,7 @@ const (
 	tableName = "ukbb-bot"
 	AWSRegion = "us-east-1"
 
-	cacheExpiration = time.Hour * 2
+	cacheExpiration = time.Hour * 3
 	cacheCleanup    = cacheExpiration * 10
 )
 
