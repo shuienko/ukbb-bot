@@ -144,7 +144,7 @@ func main() {
 
 			alarmSent, _ := state.Get("alarm")
 			if alarmSent != nil {
-				log.Println("Weather is getting worse but alarm was triggered less than 2 hous ago. Skip.")
+				log.Printf("Weather is getting worse but alarm was triggered less than %v ago. Skip.\n", cacheExpiration)
 				return
 			}
 
