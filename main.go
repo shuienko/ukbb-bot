@@ -79,7 +79,12 @@ func init() {
 	}
 
 	// Download first image bewfore bot and cron start
-	downloadImage(imageURL())
+	imgURL := imageURL()
+	if imgURL != "" {
+		downloadImage(imgURL)
+	} else {
+		log.Fatal("Init failed. Image URL not found or empty. Check site availability")
+	}
 
 	// Create Cache
 	state = cache.New(cacheExpiration, cacheCleanup)
@@ -133,7 +138,13 @@ func main() {
 	c.AddFunc(cronSchedule, func() {
 		// Save previous image to file and download a new image
 		copyNewToPrev()
-		downloadImage(imageURL())
+
+		imgURL := imageURL()
+		if imgURL == "" {
+			log.Println("Cron job failed. Image URL not found or empty. Check site availability")
+			return
+		}
+		downloadImage(imgURL)
 
 		// Check weather
 		gettingWorse := isItGettingWorse()

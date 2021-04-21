@@ -39,6 +39,11 @@ func imageURL() string {
 	re := regexp.MustCompile(`/UKBB/UKBB_[0-9]+.png`)
 	imgURLPath := re.FindString(string(respBody))
 
+	// Return empty string if no image reference found
+	if imgURLPath == "" {
+		return ""
+	}
+
 	return baseURL + imgURLPath
 }
 
