@@ -83,7 +83,7 @@ func init() {
 	if imgURL != "" {
 		downloadImage(imgURL)
 	} else {
-		log.Fatal("Init failed. Image URL not found or empty. Check site availability")
+		log.Println("Init failed. Image URL not found or empty. Check site availability")
 	}
 
 	// Create Cache
