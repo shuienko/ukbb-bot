@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -14,18 +15,18 @@ import (
 )
 
 const (
-	baseURL = "https://meteoinfo.by/radar"
+	baseURL = "https://meteo.gov.ua/"
 
-	monisoringDistance = 34  // pixel
-	homeX              = 206 // pixel
-	homeY              = 231 // pixel
+	monisoringDistance = 60  // pixel
+	homeX              = 326 // pixel
+	homeY              = 278 // pixel
 
 	RGBDeviation = 5 // for each R, G and B level
 
-	nowImageName  = "now.png"
-	prevImageName = "prev.png"
+	nowImageName  = "now.jpg"
+	prevImageName = "prev.jpg"
 
-	cronSchedule = "@every 10m"
+	cronSchedule = "@every 1m"
 
 	tableName = "ukbb-bot"
 	AWSRegion = "us-east-1"
@@ -79,12 +80,12 @@ func init() {
 	}
 
 	// Download first image bewfore bot and cron start
-	imgURL := imageURL()
-	if imgURL != "" {
-		downloadImage(imgURL)
-	} else {
-		log.Println("Init failed. Image URL not found or empty. Check site availability")
-	}
+	// imgURL := imageURL()
+	// if imgURL != "" {
+	// 	downloadImage(imgURL)
+	// } else {
+	// 	log.Println("Init failed. Image URL not found or empty. Check site availability")
+	// }
 
 	// Create Cache
 	state = cache.New(cacheExpiration, cacheCleanup)
@@ -139,12 +140,12 @@ func main() {
 		// Save previous image to file and download a new image
 		copyNewToPrev()
 
-		imgURL := imageURL()
-		if imgURL == "" {
-			log.Println("Cron job failed. Image URL not found or empty. Check site availability")
-			return
-		}
-		downloadImage(imgURL)
+		// imgURL := imageURL()
+		// if imgURL == "" {
+		// 	log.Println("Cron job failed. Image URL not found or empty. Check site availability")
+		// 	return
+		// }
+		// downloadImage(imgURL)
 
 		// Check weather
 		gettingWorse := isItGettingWorse()
@@ -183,7 +184,9 @@ func main() {
 	})
 
 	// Start Bot and Cron
-	c.Start()
-	b.Start()
+	// c.Start()
+	// b.Start()
 
+	testURL := imageURL()
+	fmt.Println(testURL)
 }

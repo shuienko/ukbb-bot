@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 // imageURL returns URL to the most recent radar image available
@@ -18,7 +19,7 @@ func imageURL() string {
 	client := &http.Client{Transport: tr}
 
 	// Create request
-	req, _ := http.NewRequest("GET", baseURL+"?q=UKBB", nil)
+	req, _ := http.NewRequest("GET", baseURL+"ua/33345/radar/", nil)
 
 	parseFormErr := req.ParseForm()
 	if parseFormErr != nil {
@@ -36,15 +37,15 @@ func imageURL() string {
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
 	// Find image refereince in HTML body
-	re := regexp.MustCompile(`/UKBB/UKBB_[0-9]+.png`)
-	imgURLPath := re.FindString(string(respBody))
+	re := regexp.MustCompile(`time_radar="([0-9]+-[0-9]+-[0-9]+ [0-9]+-[0-9]+-[0-9]+)"`)
+	matches := re.FindStringSubmatch(string(respBody))
 
 	// Return empty string if no image reference found
-	if imgURLPath == "" {
+	if matches == nil {
 		return ""
 	}
 
-	return baseURL + imgURLPath
+	return baseURL + "radars/Ukr_J%20" + strings.Replace(matches[1], " ", "%20", -1) + ".jpg"
 }
 
 // downloadImage downloads image to NowImageName
